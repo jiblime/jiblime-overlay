@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+        <longdescription>
+Live git ebuild following the master branch of bluez-tools.
+
+https://github.com/khvzak/bluez-tools/tree/master
+	<upstream>
+		<remote-id type="github">khvzak/bluez-tools</remote-id>
+	</upstream>
+</pkgmetadata>
