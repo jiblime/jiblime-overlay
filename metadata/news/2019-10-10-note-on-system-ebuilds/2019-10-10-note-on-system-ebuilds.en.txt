@@ -1,0 +1,18 @@
+Title: Note on changes in system ebuilds
+Author: jiblime-overlay
+Content-Type: text/plain
+Posted: 2019-10-10
+Revision: 1
+News-Item-Format: 1.0
+Display-If-Keyword: amd64 x86
+
+=sys-libs/glibc-2.30-r2
+USE ssp uses -fstack-protector-strong instead of -fstack-protector-all
+These patches from clearlinux-pkgs repo are applied:
+https://github.com/clearlinux-pkgs/glibc/blob/master/glibc-stable-branch.patch
+https://github.com/clearlinux-pkgs/glibc/blob/master/0001-Set-vector-width-and-alignment-to-fix-GCC-AVX-issue.patch
+https://github.com/clearlinux-pkgs/glibc/blob/master/mathlto.patch
+
+=sys-devel/binutils-2.32-r2
+Added USE flag "custom-cflags" to allow using building with
+unsupported flags without overriding the flag-o-matic eclass.
