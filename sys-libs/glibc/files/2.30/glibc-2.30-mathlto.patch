@@ -1,0 +1,41 @@
+From 64aebd8800ab2edfcd05fdbbf0e3bc9c2266ff85 Mon Sep 17 00:00:00 2001
+From: jiblime <47689567+jiblime@users.noreply.github.com>
+Date: Thu, 10 Oct 2019 18:09:02 -0700
+Subject: [PATCH] Clear Linux patch.
+ https://github.com/clearlinux-pkgs/glibc/blob/master/mathlto.patch
+
+Original message:
+align by 32
+---
+ crypt/Makefile | 2 ++
+ math/Makefile  | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/crypt/Makefile b/crypt/Makefile
+index fd361116..d943e15c 100644
+--- a/crypt/Makefile
++++ b/crypt/Makefile
+@@ -22,6 +22,8 @@ subdir        := crypt
+ 
+ include ../Makeconfig
+ 
++CFLAGS-.o += -flto=jobserver -ffat-lto-objects -fno-stack-protector
++
+ headers := crypt.h
+ 
+ extra-libs := libcrypt
+diff --git a/math/Makefile b/math/Makefile
+index cb4eaec6..d2b24c40 100644
+--- a/math/Makefile
++++ b/math/Makefile
+@@ -21,6 +21,8 @@ subdir                := math
+ 
+ include ../Makeconfig
+ 
++CFLAGS-.o += -fno-stack-protector  -falign-functions=32
++
+ # Installed header files.
+ headers                := math.h bits/mathcalls.h bits/mathinline.h \
+                   fpu_control.h complex.h bits/cmathcalls.h fenv.h \
+-- 
+2.23.0
