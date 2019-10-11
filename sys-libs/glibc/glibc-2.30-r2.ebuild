@@ -20,7 +20,6 @@ if [[ ${PV} == 9999* ]]; then
 	EGIT_REPO_URI="https://sourceware.org/git/glibc.git"
 	inherit git-r3
 else
-	#KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
 	KEYWORDS=""
 	SRC_URI="mirror://gnu/glibc/${P}.tar.xz"
 fi
@@ -1480,4 +1479,6 @@ pkg_postinst() {
 			fi
 		done
 	fi
+
+	einfo "The changelog says this is release 2.30.1. Neat!"
 }
