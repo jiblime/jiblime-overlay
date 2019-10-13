@@ -10,7 +10,7 @@ HOMEPAGE="https://sourceware.org/binutils/"
 LICENSE="GPL-3+"
 # USE="+cxx" is a transitional flag until llvm migrates to new flags:
 #    bug #677888
-IUSE="+cxx custom-cflags default-gold doc +gold multitarget +nls +plugins +ssp static-libs test"
+IUSE="+cxx -custom-cflags default-gold doc +gold multitarget +nls +plugins +ssp static-libs test"
 REQUIRED_USE="cxx? ( gold plugins ) default-gold? ( gold )"
 
 # Variables that can be set here:
@@ -59,7 +59,10 @@ PATCH_DEV=${PATCH_DEV:-slyfox}
 	https://dev.gentoo.org/~${PATCH_DEV}/distfiles/binutils-${PATCH_BINUTILS_VER}-patches-${PATCH_VER}.tar.xz"
 
 # Disable gold testsuite since it always fails.
-PATCHES=( "${FILESDIR}/${PN}-2.29.1-nogoldtest.patch" )
+PATCHES=(
+	"${FILESDIR}/${PN}-2.29.1-nogoldtest.patch"
+)
+#	"${FILESDIR}/cve/"
 
 #
 # The cross-compile logic
@@ -189,6 +192,11 @@ src_configure() {
 
 	cd "${MY_BUILDDIR}"
 	local myconf=()
+
+	test-flags -flto >/dev/null &&
+	myconf+=( --enable-lto ) &&
+	append-flags -ffat-lto-objects
+	# Adding --enable-lto is redundant
 
 	if use plugins ; then
 		myconf+=( --enable-plugins )
