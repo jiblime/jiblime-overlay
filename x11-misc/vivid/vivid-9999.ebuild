@@ -29,7 +29,7 @@ winapi-i686-pc-windows-gnu-0.4.0
 winapi-x86_64-pc-windows-gnu-0.4.0
 yaml-rust-0.4.2
 "
-inherit cargo
+inherit cargo flag-o-matic
 
 DESCRIPTION="A Spotify client for the terminal written in Rust"
 HOMEPAGE="https://github.com/sharkdp/vivid/"
@@ -64,6 +64,11 @@ src_unpack() {
         fi
 }
 
+src_configure() {
+	test-flags -flto* && append-flags -ffat-lto-objects &&
+	elog "Applied -ffat-lto-objects because of -flto in your *FLAGS. Some Cargo based packages fail because of LTO and this is one of them"
+}
+
 src_install() {
         cargo_src_install --path=.
 
@@ -75,10 +80,9 @@ src_install() {
 }
 
 pkg_postinst() {
-	einfo "Example addition to ~/.zshrc:"
-	einfo 'export LS_COLORS="$(vivid -d ${EPREFIX}/usr/share/vivid/filetypes.yml generate molokai)'
-	einfo ""
-	einfo "Built in themes for ${PV}:"
-	einfo "${EPREFIX}/usr/share/vivid/themes"
+	einfo "Built in themes for version ${PV}:"
+	einfo "$(ls ${EPREFIX}/usr/share/vivid/themes/* | sed 's/^\/.*themes\/\(.*\)\.yml/\1/g')"
+	einfo 'Example of adding vivid to your ~/.bashrc | ~/.zshrc | ~/.yourshellrc'
+	einfo '		export LS_COLORS="$(vivid -d /usr/share/vivid/filetypes.yml generate molokai)"'
 }
 
