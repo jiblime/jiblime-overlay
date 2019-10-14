@@ -1,0 +1,30 @@
+--- a/common/fs.c
++++ b/common/fs.c
+@@ -204,7 +204,7 @@ fs_mounted(char *typs, char *chrs, char *mnts, uuid_t *idp)
+ int
+ fs_getid(char *mnts, uuid_t *idb)
+ {
+-	xfs_fsop_geom_v1_t geo;
++	struct xfs_fsop_geom_v1 geo;
+ 	int fd;
+ 
+ 	fd = open(mnts, O_RDONLY);
+--- a/common/types.h
++++ b/common/types.h
+@@ -32,13 +32,6 @@
+ 
+ #define XFSDUMP_DIRPATH	inv_basepath()
+ 
+-/*
+- * If not defined in uuid/uuid.h
+- */
+-#ifndef UUID_STR_LEN
+-#define UUID_STR_LEN	36
+-#endif
+-
+ /* fundamental page size - probably should not be hardwired, but
+  * for now we will
+  */
+-- 
+2.23.0
+
