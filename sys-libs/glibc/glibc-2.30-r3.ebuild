@@ -1,17 +1,16 @@
 # Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 PYTHON_COMPAT=( python3_{5,6,7} )
 
-inherit python-any-r1 prefix eutils eapi7-ver toolchain-funcs flag-o-matic gnuconfig usr-ldscript \
+inherit python-any-r1 prefix eutils toolchain-funcs flag-o-matic gnuconfig usr-ldscript \
 	multilib systemd multiprocessing
 
 DESCRIPTION="GNU libc C library"
 HOMEPAGE="https://www.gnu.org/software/libc/"
 LICENSE="LGPL-2.1+ BSD HPND ISC inner-net rc PCRE"
-RESTRICT="strip" # Strip ourself #46186
 SLOT="2.2"
 
 EMULTILIB_PKG="true"
@@ -29,12 +28,12 @@ RELEASE_VER=${PV}
 GCC_BOOTSTRAP_VER=20180511
 
 # Gentoo patchset
-PATCH_VER=2
+PATCH_VER=3
 
 SRC_URI+=" https://dev.gentoo.org/~slyfox/distfiles/${P}-patches-${PATCH_VER}.tar.xz"
 SRC_URI+=" multilib? ( https://dev.gentoo.org/~dilfridge/distfiles/gcc-multilib-bootstrap-${GCC_BOOTSTRAP_VER}.tar.xz )"
 
-IUSE="audit +caps cet compile-locales +custom-cflags doc +gd headers-only multiarch multilib +nscd +profile selinux +ssp static-libs -suid systemtap test vanilla"
+IUSE="audit +caps cet compile-locales +custom-cflags +custom-patches doc +gd headers-only multiarch multilib +nscd +profile selinux +ssp static-libs -suid systemtap test vanilla"
 
 # Minimum kernel version that glibc requires
 MIN_KERN_VER="3.2.0"
@@ -61,9 +60,38 @@ if [[ ${CTARGET} == ${CHOST} ]] ; then
 	fi
 fi
 
+# Note [Disable automatic stripping]
+# Disabling automatic stripping for a few reasons:
+# - portage's attempt to strip breaks non-native binaries at least on
+#   arm: bug #697428
+# - portage's attempt to strip libpthread.so.0 breaks gdb thread
+#   enumeration: bug #697910. This is quite subtle:
+#   * gdb uses glibc's libthread_db-1.0.so to enumerate threads.
+#   * libthread_db-1.0.so needs access to libpthread.so.0 local symbols
+#     via 'ps_pglobal_lookup' symbol defined in gdb.
+#   * 'ps_pglobal_lookup' uses '.symtab' section table to resolve all
+#     known symbols in 'libpthread.so.0'. Specifically 'nptl_version'
+#     (unexported) is used to sanity check compatibility before enabling
+#     debugging.
+#     Also see https://sourceware.org/gdb/wiki/FAQ#GDB_does_not_see_any_threads_besides_the_one_in_which_crash_occurred.3B_or_SIGTRAP_kills_my_program_when_I_set_a_breakpoint
+#   * normal 'strip' command trims '.symtab'
+#   Thus our main goal here is to prevent 'libpthread.so.0' from
+#   losing it's '.symtab' entries.
+# As Gentoo's strip does not allow us to pass less aggressive stripping
+# options and does not check the machine target we strip selectively.
 # We need a new-enough binutils/gcc to match upstream baseline.
 # Also we need to make sure our binutils/gcc supports TLS,
 # and that gcc already contains the hardened patches.
+BDEPEND="
+	${PYTHON_DEPS}
+	>=app-misc/pax-utils-0.1.10
+	sys-devel/bison
+	!<sys-apps/sandbox-1.6
+	!<sys-apps/portage-2.1.2
+	!<sys-devel/bison-2.7
+	!<sys-devel/make-4
+	doc? ( sys-apps/texinfo )
+"
 COMMON_DEPEND="
 	nscd? ( selinux? (
 		audit? ( sys-process/audit )
@@ -74,14 +102,6 @@ COMMON_DEPEND="
 	systemtap? ( dev-util/systemtap )
 "
 DEPEND="${COMMON_DEPEND}
-	${PYTHON_DEPS}
-	>=app-misc/pax-utils-0.1.10
-	sys-devel/bison
-	!<sys-apps/sandbox-1.6
-	!<sys-apps/portage-2.1.2
-	!<sys-devel/bison-2.7
-	!<sys-devel/make-4
-	doc? ( sys-apps/texinfo )
 	test? ( >=net-dns/libidn2-2.0.5 )
 "
 RDEPEND="${COMMON_DEPEND}
@@ -91,17 +111,17 @@ RDEPEND="${COMMON_DEPEND}
 "
 
 if [[ ${CATEGORY} == cross-* ]] ; then
-	DEPEND+=" !headers-only? (
+	BDEPEND+=" !headers-only? (
 		>=${CATEGORY}/binutils-2.24
 		>=${CATEGORY}/gcc-6
 	)"
 	[[ ${CATEGORY} == *-linux* ]] && DEPEND+=" ${CATEGORY}/linux-headers"
 else
-	DEPEND+="
+	BDEPEND+="
 		>=sys-devel/binutils-2.24
 		>=sys-devel/gcc-6
-		virtual/os-headers
 	"
+	DEPEND+=" virtual/os-headers "
 	RDEPEND+="
 		>=net-dns/libidn2-2.0.5
 		vanilla? ( !sys-libs/timezone-data )
@@ -521,7 +541,7 @@ check_devpts() {
 	[[ ${MERGE_TYPE} == "buildonly" ]] && return
 
 	# Only sanity check when installing the native glibc.
-	[[ ${ROOT} != "/" ]] && return
+	[[ -n ${ROOT} ]] && return
 
 	# If they're opting in to the old suid code, then no need to check.
 	use suid && return
@@ -609,7 +629,7 @@ sanity_prechecks() {
 
 	# Prevent native builds from downgrading
 	if [[ ${MERGE_TYPE} != "buildonly" ]] && \
-	   [[ ${ROOT} == "/" ]] && \
+	   [[ -z ${ROOT} ]] && \
 	   [[ ${CBUILD} == ${CHOST} ]] && \
 	   [[ ${CHOST} == ${CTARGET} ]] ; then
 
@@ -766,6 +786,12 @@ src_prepare() {
 	if ! use vanilla ; then
 		elog "Applying Gentoo Glibc Patchset ${RELEASE_VER}-${PATCH_VER}"
 		eapply "${WORKDIR}"/patches
+		einfo "Done."
+	fi
+
+	if use custom-patches ; then
+		elog "Applying custom patches"
+		#printf '%s\n' $(ls 2.30 | sed 's/^glibc\-// ; s/\.patch//')
 		eapply "${FILESDIR}"/${PV}
 		einfo "Done."
 	fi
@@ -1102,7 +1128,7 @@ src_configure() {
 }
 
 do_src_compile() {
-	emake -C "$(builddir nptl)" || die "make nptl for ${ABI} failed"
+	emake -C "$(builddir nptl)"
 }
 
 src_compile() {
@@ -1167,7 +1193,7 @@ glibc_do_src_install() {
 	local builddir=$(builddir nptl)
 	cd "${builddir}"
 
-	emake install_root="${D}$(build_eprefix)$(alt_prefix)" install || die
+	emake install_root="${D}/$(build_eprefix)$(alt_prefix)" install
 
 	# This version (2.26) provides some compatibility libraries for the NIS/NIS+ support
 	# which come without headers etc. Only needed for binary packages since the
@@ -1180,13 +1206,20 @@ glibc_do_src_install() {
 	# '#define VERSION "2.26.90"' -> '2.26.90'
 	local upstream_pv=$(sed -n -r 's/#define VERSION "(.*)"/\1/p' "${S}"/version.h)
 
-	if [[ -e ${ED}$(alt_usrlibdir)/libm-${upstream_pv}.a ]] ; then
+		# Avoid stripping binaries not targeted by ${CHOST}. Or else
+		# ${CHOST}-strip would break binaries build for ${CTARGET}.
+		is_crosscompile && dostrip -x /
+		# gdb thread introspection relies on local libpthreas symbols. stripping breaks it
+		# See Note [Disable automatic stripping]
+		dostrip -x $(alt_libdir)/libpthread-${upstream_pv}.so
+
+		if [[ -e ${ED}/$(alt_usrlibdir)/libm-${upstream_pv}.a ]] ; then
 		# Move versioned .a file out of libdir to evade portage QA checks
 		# instead of using gen_usr_ldscript(). We fix ldscript as:
 		# "GROUP ( /usr/lib64/libm-<pv>.a ..." -> "GROUP ( /usr/lib64/glibc-<pv>/libm-<pv>.a ..."
-		sed -i "s@\(libm-${upstream_pv}.a\)@${P}/\1@" "${ED}"$(alt_usrlibdir)/libm.a || die
+		sed -i "s@\(libm-${upstream_pv}.a\)@${P}/\1@" "${ED}"/$(alt_usrlibdir)/libm.a || die
 		dodir $(alt_usrlibdir)/${P}
-		mv "${ED}"$(alt_usrlibdir)/libm-${upstream_pv}.a "${ED}"$(alt_usrlibdir)/${P}/libm-${upstream_pv}.a || die
+		mv "${ED}"/$(alt_usrlibdir)/libm-${upstream_pv}.a "${ED}"/$(alt_usrlibdir)/${P}/libm-${upstream_pv}.a || die
 	fi
 
 	# We'll take care of the cache ourselves
@@ -1344,7 +1377,7 @@ glibc_do_src_install() {
 
 	# Generate all locales if this is a native build as locale generation
 	if use compile-locales && ! is_crosscompile ; then
-		run_locale_gen --inplace-glibc "${ED}"
+		run_locale_gen --inplace-glibc "${ED}/"
 		sed -e 's:COMPILED_LOCALES="":COMPILED_LOCALES="1":' -i "${ED}"/usr/sbin/locale-gen || die
 	fi
 }
@@ -1352,7 +1385,7 @@ glibc_do_src_install() {
 glibc_headers_install() {
 	local builddir=$(builddir "headers")
 	cd "${builddir}"
-	emake install_root="${D}$(build_eprefix)$(alt_prefix)" install-headers
+	emake install_root="${D}/$(build_eprefix)$(alt_prefix)" install-headers
 
 	insinto $(alt_headers)/gnu
 	doins "${S}"/include/gnu/stubs.h
@@ -1361,23 +1394,6 @@ glibc_headers_install() {
 	# we build a 2nd stage cross-compiler, gcc finds the target
 	# system headers correctly.  See gcc/doc/gccinstall.info
 	dosym usr/include $(alt_prefix)/sys-include
-}
-
-src_strip() {
-	# gdb is lame and requires some debugging information to remain in
-	# libpthread, so we need to strip it by hand.  libthread_db makes no
-	# sense stripped as it is only used when debugging.
-	local pthread=$(has splitdebug ${FEATURES} && echo "libthread_db" || echo "lib{pthread,thread_db}")
-	env \
-		-uRESTRICT \
-		CHOST=${CTARGET} \
-		STRIP_MASK="/*/{,tls/}${pthread}*" \
-		prepallstrip
-	# if user has stripping enabled and does not have split debug turned on,
-	# then leave the debugging sections in libpthread.
-	if ! has nostrip ${FEATURES} && ! has splitdebug ${FEATURES} ; then
-		${STRIP:-${CTARGET}-strip} --strip-debug "${ED}"$(alt_prefix)/*/libpthread-*.so
-	fi
 }
 
 src_install() {
@@ -1393,8 +1409,6 @@ src_install() {
 		elog "Not installing static glibc libraries"
 		find "${ED}" -name "*.a" -and -not -name "*_nonshared.a" -delete
 	fi
-
-	src_strip
 }
 
 # Simple test to make sure our new glibc isn't completely broken.
@@ -1447,7 +1461,7 @@ pkg_preinst() {
 		einfo "Defaulting /etc/host.conf:multi to on"
 	fi
 
-	[[ ${ROOT} != "/" ]] && return 0
+	[[ -n ${ROOT} ]] && return 0
 	[[ -d ${ED}/$(get_libdir) ]] || return 0
 	[[ -z ${BOOTSTRAP_RAP} ]] && glibc_sanity_check
 }
@@ -1458,11 +1472,11 @@ pkg_postinst() {
 
 	if ! tc-is-cross-compiler && [[ -x ${EROOT}/usr/sbin/iconvconfig ]] ; then
 		# Generate fastloading iconv module configuration file.
-		"${EROOT}"/usr/sbin/iconvconfig --prefix="${ROOT}"
+		"${EROOT}"/usr/sbin/iconvconfig --prefix="${ROOT}/"
 	fi
 
-	if ! is_crosscompile && [[ ${ROOT} == "/" ]] ; then
-		use compile-locales || run_locale_gen "${EROOT}"
+	if ! is_crosscompile && [[ -z ${ROOT} ]] ; then
+		use compile-locales || run_locale_gen "${EROOT}/"
 	fi
 
 	# Check for sanity of /etc/nsswitch.conf, take 2
