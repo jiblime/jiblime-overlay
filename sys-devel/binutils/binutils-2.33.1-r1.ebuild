@@ -8,10 +8,8 @@ inherit eutils libtool flag-o-matic gnuconfig multilib versionator
 DESCRIPTION="Tools necessary to build programs"
 HOMEPAGE="https://sourceware.org/binutils/"
 LICENSE="GPL-3+"
-# USE="+cxx" is a transitional flag until llvm migrates to new flags:
-#    bug #677888
-IUSE="+cxx -custom-cflags default-gold doc +gold multitarget +nls +plugins +ssp static-libs test"
-REQUIRED_USE="cxx? ( gold plugins ) default-gold? ( gold )"
+IUSE="+clear-cflags -custom-cflags default-gold doc +gold multitarget +nls +plugins ssp static-libs test"
+REQUIRED_USE="default-gold? ( gold )"
 
 # Variables that can be set here:
 # PATCH_VER          - the patchset version
@@ -20,10 +18,10 @@ REQUIRED_USE="cxx? ( gold plugins ) default-gold? ( gold )"
 #                    - Default: PV
 # PATCH_DEV          - Use download URI https://dev.gentoo.org/~{PATCH_DEV}/distfiles/...
 #                      for the patchsets
-#                      Default: dilfridge :)
 
-PATCH_VER=2
+PATCH_VER=1
 PATCH_DEV=dilfridge
+PATCH_BINUTILS_VER=2.33.1
 
 case ${PV} in
 	9999)
@@ -45,7 +43,6 @@ case ${PV} in
 	*)
 		SRC_URI="mirror://gnu/binutils/binutils-${PV}.tar.xz"
 		SLOT=$(get_version_component_range 1-2)
-		KEYWORDS="" # Way too many build fails
 		;;
 esac
 
@@ -57,12 +54,6 @@ PATCH_DEV=${PATCH_DEV:-slyfox}
 
 [[ -z ${PATCH_VER} ]] || SRC_URI="${SRC_URI}
 	https://dev.gentoo.org/~${PATCH_DEV}/distfiles/binutils-${PATCH_BINUTILS_VER}-patches-${PATCH_VER}.tar.xz"
-
-# Disable gold testsuite since it always fails.
-PATCHES=(
-	"${FILESDIR}/${PN}-2.29.1-nogoldtest.patch"
-)
-#	"${FILESDIR}/cve/"
 
 #
 # The cross-compile logic
@@ -106,9 +97,6 @@ src_unpack() {
 
 src_prepare() {
 	if [[ ! -z ${PATCH_VER} ]] ; then
-		# Use upstream patch to enable development mode
-		rm -v "${WORKDIR}/patch"/0000-Gentoo-Git-is-development.patch || die
-
 		einfo "Applying binutils-${PATCH_BINUTILS_VER} patchset ${PATCH_VER}"
 		eapply "${WORKDIR}/patch"/*.patch
 	fi
@@ -175,10 +163,15 @@ src_configure() {
 	strip-linguas -u */po
 
 	# Keep things sane
-	if ! use custom-cflags; then
-		strip-flags
-	else
+	if use custom-cflags ; then
 		einfo "Using unsupported CFLAGS to compile."
+	elif use clear-cflags ; then
+		strip-flags
+		append-flags -O3 -march=native -ffat-lto-objects -flto=jobserver -fstack-protector-strong
+		append-ldflags -Wl,-O1 -Wl,--as-needed
+		einfo "Using CFLAGS based on Clear Linux specs."
+	else
+		strip-flags
 	fi
 
 	use ssp && append-flags -fstack-protector-strong
@@ -194,9 +187,7 @@ src_configure() {
 	local myconf=()
 
 	test-flags -flto >/dev/null &&
-	myconf+=( --enable-lto ) &&
 	append-flags -ffat-lto-objects
-	# Adding --enable-lto is redundant
 
 	if use plugins ; then
 		myconf+=( --enable-plugins )
