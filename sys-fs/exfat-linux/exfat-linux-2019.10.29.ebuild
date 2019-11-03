@@ -11,7 +11,8 @@ MY_P=${PN}-${MY_PV}
 DESCRIPTION="exFAT filesystem module for Linux kernel based on sdFAT drivers by Samsung"
 HOMEPAGE="https://github.com/arter97/exfat-linux"
 SRC_URI="https://github.com/arter97/${PN}/archive/${MY_PV}.tar.gz -> ${MY_P}-${PV}.tar.gz"
-KEYWORDS="~amd64 ~arm ~arm64 ~x86"
+#KEYWORDS="~amd64 ~arm ~arm64 ~x86"
+# It's broke, yo
 LICENSE="GPL-2"
 SLOT="0"
 
