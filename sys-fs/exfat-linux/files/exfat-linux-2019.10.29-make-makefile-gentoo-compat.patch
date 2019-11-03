@@ -1,0 +1,30 @@
+diff --git a/Makefile b/Makefile
+index 4e7c7c2..9bb5f77 100644
+--- a/Makefile
++++ b/Makefile
+@@ -12,10 +12,10 @@ exfat-objs	:= super.o core.o core_exfat.o blkdev.o fatent.o cache.o \
+ else
+ # Called from external kernel module build
+ 
+-KERNELRELEASE	?= $(shell uname -r)
+-KDIR	?= /lib/modules/${KERNELRELEASE}/build
+-MDIR	?= /lib/modules/${KERNELRELEASE}
+-PWD	:= $(shell pwd)
++KERNELRELEASE	:= $(shell uname -r)
++KDIR	:= /lib/modules/${KERNELRELEASE}/build
++MDIR	:= /lib/modules/${KERNELRELEASE}
++PWD	:= $(shell pwd)
+ 
+ export CONFIG_EXFAT_FS := m
+ 
+@@ -29,8 +29,8 @@ help:
+ 	$(MAKE) -C $(KDIR) M=$(PWD) help
+ 
+ install: exfat.ko
+-	rm -f ${MDIR}/kernel/fs/exfat/exfat.ko
+-	install -m644 -b -D exfat.ko ${MDIR}/kernel/fs/exfat/exfat.ko
++	rm -f ${MDIR}/addon/exfat.ko
++	install -m644 -b -D exfat.ko ${MDIR}/addon/exfat.ko
+ 	depmod -aq
+ 
+ uninstall:
