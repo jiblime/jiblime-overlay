@@ -1,3 +1,28 @@
+From c8c968db811c4531479faa352d3ffe6111caf52b Mon Sep 17 00:00:00 2001
+From: jiblime <47689567+jiblime@users.noreply.github.com>
+Date: Tue, 5 Nov 2019 06:43:30 -0800
+Subject: [PATCH] Make compatible with >=xfsprogs-5.2.0
+
+https://patchwork.openembedded.org/patch/163983/
+
+Offending files in xfsprogs-5.2.1
+
+rtcp/xfs_rtcp.c
+repair/xfs_repair.c
+man/man2/ioctl_xfs_fsop_geometry.2
+man/man2/ioctl_xfs_fsop_geometry.2
+libxfs/xfs_fs.h
+libxfs/xfs_fs.h
+fsr/xfs_fsr.c
+fsr/xfs_fsr.c
+fsr/xfs_fsr.c
+fsr/xfs_fsr.c
+---
+ common/fs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/common/fs.c b/common/fs.c
+index a4c175c..1704152 100644
 --- a/common/fs.c
 +++ b/common/fs.c
 @@ -204,7 +204,7 @@ fs_mounted(char *typs, char *chrs, char *mnts, uuid_t *idp)
@@ -5,26 +30,10 @@
  fs_getid(char *mnts, uuid_t *idb)
  {
 -	xfs_fsop_geom_v1_t geo;
-+	struct xfs_fsop_geom_v1 geo;
++	struct xfs_fsop_geom_v1 geo; /* https://patchwork.openembedded.org/patch/163983/ */
  	int fd;
  
  	fd = open(mnts, O_RDONLY);
---- a/common/types.h
-+++ b/common/types.h
-@@ -32,13 +32,6 @@
- 
- #define XFSDUMP_DIRPATH	inv_basepath()
- 
--/*
-- * If not defined in uuid/uuid.h
-- */
--#ifndef UUID_STR_LEN
--#define UUID_STR_LEN	36
--#endif
--
- /* fundamental page size - probably should not be hardwired, but
-  * for now we will
-  */
 -- 
 2.23.0
 
