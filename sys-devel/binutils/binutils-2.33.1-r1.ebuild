@@ -1,14 +1,14 @@
 # Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
-inherit eutils libtool flag-o-matic gnuconfig multilib versionator
+inherit eutils libtool flag-o-matic gnuconfig multilib
 
 DESCRIPTION="Tools necessary to build programs"
 HOMEPAGE="https://sourceware.org/binutils/"
 LICENSE="GPL-3+"
-IUSE="+clear-cflags -custom-cflags default-gold doc +gold multitarget +nls +plugins ssp static-libs test"
+IUSE="-custom-cflags +custom-patches default-gold doc +gold +lto multitarget +nls +plugins +ssp static-libs test"
 REQUIRED_USE="default-gold? ( gold )"
 
 # Variables that can be set here:
@@ -21,7 +21,6 @@ REQUIRED_USE="default-gold? ( gold )"
 
 PATCH_VER=1
 PATCH_DEV=dilfridge
-PATCH_BINUTILS_VER=2.33.1
 
 case ${PV} in
 	9999)
@@ -36,13 +35,14 @@ case ${PV} in
 		inherit git-r3
 		S=${WORKDIR}/binutils
 		EGIT_CHECKOUT_DIR=${S}
-		EGIT_BRANCH=$(get_version_component_range 1-2)
+		EGIT_BRANCH=$(ver_cut 1-2)
 		EGIT_BRANCH="binutils-${EGIT_BRANCH/./_}-branch"
-		SLOT=$(get_version_component_range 1-2)
+		SLOT=$(ver_cut 1-2)
 		;;
 	*)
 		SRC_URI="mirror://gnu/binutils/binutils-${PV}.tar.xz"
-		SLOT=$(get_version_component_range 1-2)
+		SLOT=$(ver_cut 1-2)
+		KEYWORDS="~amd64"
 		;;
 esac
 
@@ -80,6 +80,8 @@ DEPEND="${RDEPEND}
 	sys-devel/flex
 	virtual/yacc
 "
+
+#RESTRICT="!test? ( test )"
 
 MY_BUILDDIR=${WORKDIR}/build
 
@@ -147,6 +149,14 @@ toolchain-binutils_pkgversion() {
 }
 
 src_configure() {
+
+
+	if use custom-patches ; then
+		elog "Applying custom patches"
+		eapply "${FILESDIR}"/2.33.1-clear
+		einfo "Done."
+	fi
+
 	# Setup some paths
 	LIBPATH=/usr/$(get_libdir)/binutils/${CTARGET}/${PV}
 	INCPATH=${LIBPATH}/include
@@ -165,11 +175,7 @@ src_configure() {
 	# Keep things sane
 	if use custom-cflags ; then
 		einfo "Using unsupported CFLAGS to compile."
-	elif use clear-cflags ; then
-		strip-flags
-		append-flags -O3 -march=native -ffat-lto-objects -flto=jobserver -fstack-protector-strong
-		append-ldflags -Wl,-O1 -Wl,--as-needed
-		einfo "Using CFLAGS based on Clear Linux specs."
+		ewarn "Expect random errors system-wide with the custom-cflags use enabled"
 	else
 		strip-flags
 	fi
@@ -186,8 +192,16 @@ src_configure() {
 	cd "${MY_BUILDDIR}"
 	local myconf=()
 
+	if use lto ; then
+		append-flags -flto=${MAKEOPTS#-j}
+		myconf+=(--enable-lto)
+		AR=gcc-ar
+		ranlib=gcc-ranlib
+		nm=gcc-nm # redundant, will be removed once testing confirms its uselessness
+	fi
+
 	test-flags -flto >/dev/null &&
-	append-flags -ffat-lto-objects
+	append-flags -ffat-lto-objects # on one ebuild compile, stdout showed that it was being added. Doesn't matter since it has no effect without -flto
 
 	if use plugins ; then
 		myconf+=( --enable-plugins )
@@ -299,8 +313,7 @@ src_test() {
 	# bug 637066
 	filter-flags -Wall -Wreturn-type
 
-	# enable verbose test run and result logging
-	emake -k check RUNTESTFLAGS='-a -v' VERBOSE=1
+	emake -k check
 }
 
 src_install() {

@@ -6,8 +6,8 @@
 		<name>Gentoo Toolchain Project</name>
 	</maintainer>
 	<use>
-		<flag name="clear-cflags">Build with CFLAGS loosely based on Clear Linux specs: -march=native -O3 -ffat-lto-objects -flto -fstack-protector-strong</flag>
-		<flag name="custom-cflags">Allow building with unsupported CFLAGS</flag>
+		<flag name="custom-cflags">Apply user FLAGS. WARNING: Important linker tests fail with custom flags, this is unrecommended</flag>
+		<flag name="custom-patches">Apply patches from this repository (unsupported)</flag>
 		<flag name="default-gold">Set ld to point to ld.gold instead of ld.bfd</flag>
 		<flag name="gold">Build ld.gold linker</flag>
 		<flag name="plugins">Enable plugin support in tools</flag>
