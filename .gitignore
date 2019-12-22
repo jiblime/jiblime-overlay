@@ -1,2 +1,3 @@
 sys-libs/glibc/files/2.30/glibc-2.30-change-assembler-tuner.patch
 sys-libs/glibc/files/2.30/glibc-2.30-vzeroupper-2.27.patch
+sys-libs/glibc

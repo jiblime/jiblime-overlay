@@ -1,0 +1,50 @@
+pause.patch
+---
+https://github.com/clearlinux-pkgs/glibc/blob/master/pause.patch
+Title: N/A
+
+---
+Notes:
+Replaces the pause instruction with lfence. For AMD, the collection of Spectre/Meltdown mitigations don't seem to
+have any heavy performance impacts. There is also the issue of PAUSE not serializing on AMD specifically.
+
+https://lore.kernel.org/patchwork/patch/872873/
+ - Commit title: x86/retpoline: Use LFENCE instead of PAUSE in the retpoline/RSB filling RSB macros
+
+	[..]The PAUSE instruction is currently used in the retpoline and RSB filling
+	macros as a speculation trap.  The use of PAUSE was originally suggested
+	because it showed a very, very small difference in the amount of
+	cycles/time used to execute the retpoline as compared to LFENCE.
+
+	On AMD, the PAUSE instruction is not a serializing instruction, so the
+	PAUSE/JMP loop will use excess power as it is speculated over waiting
+	for return to mispredict to the correct target.[...]
+
+https://hadibrais.wordpress.com/2018/05/14/the-significance-of-the-x86-lfence-instruction/
+ - Good blogpost about lfence and why it is used, has external links to more information
+
+https://cyber.wtf/2018/02/13/in-debt-to-retpoline/
+ - Information about the application of 'retpoline' in the GNU/Linux kernel, with info on performance impact/future-proofing
+	Section title: The weird case of pause
+	[...]However, pause is not actually an instruction. It is a hint to the CPU and my guess
+	is that the hint is not taken. I ran retpoline on my Broadwell and my Skylake and
+	compared the penalty: there was almost no difference.[...]
+
+
+
+___
+
+spinaphore.patch
+---
+https://github.com/clearlinux-pkgs/glibc/commit/70b95f0335a48f5de4eea307f7633474a2aee3e5
+Title: Revise spin rounds in pthread mutex lock
+
+X86 CPUs starting from skylake are with much bigger CPU cycles for intr
+'pause', e.x.: broadwell - 9 cycles, skylake - 140 cycles, kabylake -
+140 cycles, coffelake - 152 cycles. Patching here to revisit the total spin cycles to be not bigger than general context switch cost which is ~10000 cycles.
+
+---
+Notes:
+Sounds like this would be applicable performance optimization for newer processors, haven't looked into it 
+
+---
