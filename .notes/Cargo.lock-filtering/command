@@ -1,0 +1,5 @@
+this=$(print "$(grep -n metadata Cargo.lock | cut -nc -4)-1"  | bc)
+
+tail -n "${this}" Cargo.lock > that
+
+sed -i 's/"checksum\ \(.*[0-9]\)\ .*/\1/g ; s/\ /\-/g' that
