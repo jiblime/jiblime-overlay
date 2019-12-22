@@ -3,3 +3,6 @@
 #=sys-devel/binutils-2.32-r2
 #=sys-devel/binutils-2.33.1-r1
 
+# Fails to build, probably a trivial fix if are interested in fixing it
+=app-emulation/libvirt-5.10.0
+=dev-python/libvirt-python-5.10.0

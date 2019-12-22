@@ -1,0 +1,501 @@
+From cfb53dfa96d69dcb6d867bba8ef407016449df25 Mon Sep 17 00:00:00 2001
+From: jiblime <47689567+jiblime@users.noreply.github.com>
+Date: Fri, 20 Dec 2019 16:56:35 -0800
+Subject: [PATCH] Replace all deprecated /var/run links to /run
+
+---
+ configure.ac                                                  | 2 +-
+ docs/drvlxc.html.in                                           | 2 +-
+ docs/drvqemu.html.in                                          | 4 ++--
+ docs/internals/command.html.in                                | 2 +-
+ docs/news-2008.html.in                                        | 2 +-
+ docs/news-2011.html.in                                        | 2 +-
+ docs/news-2012.html.in                                        | 2 +-
+ docs/news-2013.html.in                                        | 2 +-
+ docs/remote.html.in                                           | 4 ++--
+ src/driver.c                                                  | 2 +-
+ src/remote/remote_driver.c                                    | 2 +-
+ src/util/virhostdev.c                                         | 2 +-
+ src/util/virnetdevmacvlan.c                                   | 4 ++--
+ src/util/virnetdevopenvswitch.c                               | 2 +-
+ src/util/virnetdevvportprofile.c                              | 2 +-
+ tests/domainschemadata/backing-chains.xml                     | 2 +-
+ .../disk-backing-chains-index.x86_64-2.12.0.args              | 2 +-
+ .../disk-backing-chains-index.x86_64-latest.args              | 2 +-
+ tests/qemuxml2argvdata/disk-backing-chains-index.xml          | 2 +-
+ .../disk-backing-chains-noindex.x86_64-2.12.0.args            | 2 +-
+ .../disk-backing-chains-noindex.x86_64-latest.args            | 2 +-
+ tests/qemuxml2argvdata/disk-backing-chains-noindex.xml        | 2 +-
+ tests/qemuxml2argvdata/disk-backing-chains.xml                | 2 +-
+ tests/qemuxml2argvdata/disk-network-nbd.args                  | 2 +-
+ tests/qemuxml2argvdata/disk-network-nbd.x86_64-2.12.0.args    | 2 +-
+ tests/qemuxml2argvdata/disk-network-nbd.x86_64-latest.args    | 2 +-
+ tests/qemuxml2argvdata/disk-network-nbd.xml                   | 2 +-
+ tests/qemuxml2xmloutdata/disk-backing-chains-active.xml       | 2 +-
+ tests/qemuxml2xmloutdata/disk-backing-chains-inactive.xml     | 2 +-
+ tests/qemuxml2xmloutdata/disk-backing-chains-index-active.xml | 2 +-
+ .../qemuxml2xmloutdata/disk-backing-chains-index-inactive.xml | 2 +-
+ tests/qemuxml2xmloutdata/disk-backing-chains-noindex.xml      | 2 +-
+ tests/qemuxml2xmloutdata/disk-network-nbd.xml                 | 2 +-
+ tests/vircgroupdata/ovirt-node-6.6.mounts                     | 2 +-
+ 34 files changed, 37 insertions(+), 37 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index ef521e3..50dd8ae 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -130,7 +130,7 @@ AC_PROG_INSTALL
+ AC_PROG_CPP
+ 
+ dnl autoconf 2.70 adds a --runstatedir option so that downstreams
+-dnl can point to /run instead of the historic /var/run, but
++dnl can point to /run instead of the historic /run, but
+ dnl autoconf hasn't had a release since 2012.
+ dnl
+ dnl gnulib sets configmake.h to include runstatedir, but sets
+diff --git a/docs/drvlxc.html.in b/docs/drvlxc.html.in
+index 6ee9ee8..c1c3187 100644
+--- a/docs/drvlxc.html.in
++++ b/docs/drvlxc.html.in
+@@ -246,7 +246,7 @@ should either specify the UID/GID mapping in the configuration to
+ enable user namespaces and thus block access to the UNIX domain socket
+ based on permissions, or should ensure the relevant directories have
+ a bind mount to hide them. This is particularly important for the
+-<code>/run</code> or <code>/var/run</code> directories.
++<code>/run</code> or <code>/run</code> directories.
+ </p>
+ 
+ 
+diff --git a/docs/drvqemu.html.in b/docs/drvqemu.html.in
+index 294117e..76ba20c 100644
+--- a/docs/drvqemu.html.in
++++ b/docs/drvqemu.html.in
+@@ -133,7 +133,7 @@ qemu+ssh://root@example.com/system   (remote access, SSH tunnelled)
+     <ul>
+       <li>
+         <p>
+-          The directories <code>/var/run/libvirt/qemu/</code>,
++          The directories <code>/run/libvirt/qemu/</code>,
+           <code>/var/lib/libvirt/qemu/</code> and
+           <code>/var/cache/libvirt/qemu/</code> must all have their
+           ownership set to match the user / group ID that QEMU
+@@ -218,7 +218,7 @@ chmod o+x /path/to/directory
+       to run as 'qemu' by default, a number of changes will be required
+       before an administrator can change a host to run guests as root.
+       In particular it will be necessary to change ownership on the
+-      directories <code>/var/run/libvirt/qemu/</code>,
++      directories <code>/run/libvirt/qemu/</code>,
+       <code>/var/lib/libvirt/qemu/</code> and
+       <code>/var/cache/libvirt/qemu/</code> back to root, in addition
+       to changing the <code>/etc/libvirt/qemu.conf</code> settings.
+diff --git a/docs/internals/command.html.in b/docs/internals/command.html.in
+index 8a9061e..6fa725a 100644
+--- a/docs/internals/command.html.in
++++ b/docs/internals/command.html.in
+@@ -221,7 +221,7 @@ virCommandDaemonize(cmd);
+     </p>
+ 
+ <pre>
+-virCommandSetPidFile(cmd, "/var/run/dnsmasq.pid");
++virCommandSetPidFile(cmd, "/run/dnsmasq.pid");
+ </pre>
+ 
+     <p>
+diff --git a/docs/news-2008.html.in b/docs/news-2008.html.in
+index 28f3b98..691f319 100644
+--- a/docs/news-2008.html.in
++++ b/docs/news-2008.html.in
+@@ -371,7 +371,7 @@
+ 
+       <li>Bug Fixes:<br/>
+       save change to config file for Xen (Ryan Scott),<br/>
+-      fix /var/run/libvirt/ group ownership (Anton Protopopov),<br/>
++      fix /run/libvirt/ group ownership (Anton Protopopov),<br/>
+       ancient libparted workaround (Soren Hansen),<br/>
+       out of bount array access (Daniel Berrange),<br/>
+       remote check bug (Dave Leskovec),<br/>
+diff --git a/docs/news-2011.html.in b/docs/news-2011.html.in
+index f59bb19..c38c73b 100644
+--- a/docs/news-2011.html.in
++++ b/docs/news-2011.html.in
+@@ -128,7 +128,7 @@
+       Update of filters to handle multiple IP addresses (Stefan Berger),<br/>
+       build: update to latest gnulib (Eric Blake),<br/>
+       build: properly skip tests (Eric Blake),<br/>
+-      spec: mark directories in /var/run as ghosts (Eric Blake),<br/>
++      spec: mark directories in /run as ghosts (Eric Blake),<br/>
+       qemu: filter blkio 0-device-weight at two other places (Hu Tao),<br/>
+       qemu: amend existing table of device weights (Eric Blake),<br/>
+       virsh: fix setting weight and device-weights at the same time (Hu Tao),<br/>
+diff --git a/docs/news-2012.html.in b/docs/news-2012.html.in
+index ede85c4..9783786 100644
+--- a/docs/news-2012.html.in
++++ b/docs/news-2012.html.in
+@@ -1730,7 +1730,7 @@
+       python: fix snapshot listing bugs (Eric Blake),<br/>
+       qemu: Don't overwrite security labels (Michal Privoznik),<br/>
+       rpc: Fix memleak in virNetMessageEncodeHeader (Michal Privoznik),<br/>
+-      Fix privileges on /var/run/libvirt directory (Daniel P. Berrange),<br/>
++      Fix privileges on /run/libvirt directory (Daniel P. Berrange),<br/>
+       Only migrate profile in non-privileged libvirtd instance (Daniel P. Berrange),<br/>
+       snapshot: avoid virsh crash with older servers (Eric Blake),<br/>
+       LXC: fix memory leak in lxcContainerMountFSBlockAuto (Gao feng),<br/>
+diff --git a/docs/news-2013.html.in b/docs/news-2013.html.in
+index 6cc3bca..9588d8c 100644
+--- a/docs/news-2013.html.in
++++ b/docs/news-2013.html.in
+@@ -1914,7 +1914,7 @@
+       libxl: fix leaking libxl events (Jim Fehlig),<br/>
+       qemu: Fix cgroup handling when setting VCPU BW (Martin Kletzander),<br/>
+       Don't mount selinux fs in LXC if selinux is disabled (Daniel P. Berrange),<br/>
+-      Fix LXC startup when /var/run is an absolute symlink (Daniel P. Berrange),<br/>
++      Fix LXC startup when /run is an absolute symlink (Daniel P. Berrange),<br/>
+       conf: Fix the bug of disk-&gt;copy_on_read formating (Osier Yang),<br/>
+       daemon: fix leak after listing all volumes (Ján Tomko),<br/>
+       qemu: Fix crash in migration of graphics-less guests. (Viktor Mihajlovski),<br/>
+diff --git a/docs/remote.html.in b/docs/remote.html.in
+index 78e071a..81fa7b4 100644
+--- a/docs/remote.html.in
++++ b/docs/remote.html.in
+@@ -70,8 +70,8 @@ Remote libvirt supports a range of transports:
+  local machine, it is not encrypted, and uses Unix permissions or
+  SELinux for authentication.
+  The standard socket names are
+- <code>/var/run/libvirt/libvirt-sock</code> and
+- <code>/var/run/libvirt/libvirt-sock-ro</code> (the latter
++ <code>/run/libvirt/libvirt-sock</code> and
++ <code>/run/libvirt/libvirt-sock-ro</code> (the latter
+  for read-only connections).
+  </dd>
+       <dt><code>ssh</code></dt>
+diff --git a/src/driver.c b/src/driver.c
+index 2392fd7..54dd1e6 100644
+--- a/src/driver.c
++++ b/src/driver.c
+@@ -72,7 +72,7 @@ virDriverLoadModule(const char *name,
+ 
+ /**
+  * virDriverShouldAutostart:
+- * @dir: driver's run state directory (usually /var/run/libvirt/$driver)
++ * @dir: driver's run state directory (usually /run/libvirt/$driver)
+  * @autostart: whether driver should initiate autostart
+  *
+  * Automatic starting of libvirt's objects (e.g. domains, networks, storage
+diff --git a/src/remote/remote_driver.c b/src/remote/remote_driver.c
+index a1384fc..85f3eb7 100644
+--- a/src/remote/remote_driver.c
++++ b/src/remote/remote_driver.c
+@@ -788,7 +788,7 @@ remoteGetUNIXSocketHelper(remoteDriverTransport transport,
+         /* Intentionally do *NOT* use RUNSTATEDIR here. We might
+          * be connecting to a remote machine, and cannot assume
+          * the remote host has /run. The converse is ok though,
+-         * any machine with /run will have a /var/run symlink.
++         * any machine with /run will have a /run symlink.
+          * The portable option is to thus use $LOCALSTATEDIR/run
+          */
+         sockname = g_strdup_printf("%s/run/libvirt/%s-%s", LOCALSTATEDIR,
+diff --git a/src/util/virhostdev.c b/src/util/virhostdev.c
+index 39e6b8f..1b43876 100644
+--- a/src/util/virhostdev.c
++++ b/src/util/virhostdev.c
+@@ -535,7 +535,7 @@ virHostdevSetNetConfig(virDomainHostdevDefPtr hostdev,
+ /* @oldStateDir:
+  * For upgrade purpose:
+  * To an existing VM on QEMU, the hostdev netconfig file is originally stored
+- * in cfg->stateDir (/var/run/libvirt/qemu). Switch to new version, it uses new
++ * in cfg->stateDir (/run/libvirt/qemu). Switch to new version, it uses new
+  * location (mgr->stateDir) but certainly will not find it. In this
+  * case, try to find in the old state dir.
+  */
+diff --git a/src/util/virnetdevmacvlan.c b/src/util/virnetdevmacvlan.c
+index 09efa04..0a978f1 100644
+--- a/src/util/virnetdevmacvlan.c
++++ b/src/util/virnetdevmacvlan.c
+@@ -536,8 +536,8 @@ static int instance2str(const unsigned char *p, char *dst, size_t size)
+     return -1;
+ }
+ 
+-# define LLDPAD_PID_FILE  "/var/run/lldpad.pid"
+-# define VIRIP_PID_FILE   "/var/run/virip.pid"
++# define LLDPAD_PID_FILE  "/run/lldpad.pid"
++# define VIRIP_PID_FILE   "/run/virip.pid"
+ 
+ /**
+  * virNetDevMacVLanVPortProfileCallback:
+diff --git a/src/util/virnetdevopenvswitch.c b/src/util/virnetdevopenvswitch.c
+index f961777..4fb24b9 100644
+--- a/src/util/virnetdevopenvswitch.c
++++ b/src/util/virnetdevopenvswitch.c
+@@ -499,7 +499,7 @@ virNetDevOpenvswitchGetVhostuserIfname(const char *path,
+ 
+     /* Openvswitch vhostuser path are hardcoded to
+      * /<runstatedir>/openvswitch/<ifname>
+-     * for example: /var/run/openvswitch/dpdkvhostuser0
++     * for example: /run/openvswitch/dpdkvhostuser0
+      *
+      * so we pick the filename and check it's a openvswitch interface
+      */
+diff --git a/src/util/virnetdevvportprofile.c b/src/util/virnetdevvportprofile.c
+index 593bd6e..045f051 100644
+--- a/src/util/virnetdevvportprofile.c
++++ b/src/util/virnetdevvportprofile.c
+@@ -72,7 +72,7 @@ VIR_LOG_INIT("util.netdevvportprofile");
+ # define STATUS_POLL_TIMEOUT_USEC (10 * MICROSEC_PER_SEC)
+ # define STATUS_POLL_INTERVL_USEC (MICROSEC_PER_SEC / 8)
+ 
+-# define LLDPAD_PID_FILE  "/var/run/lldpad.pid"
++# define LLDPAD_PID_FILE  "/run/lldpad.pid"
+ 
+ 
+ enum virNetDevVPortProfileLinkOp {
+diff --git a/tests/domainschemadata/backing-chains.xml b/tests/domainschemadata/backing-chains.xml
+index 7fd3013..882f0ee 100644
+--- a/tests/domainschemadata/backing-chains.xml
++++ b/tests/domainschemadata/backing-chains.xml
+@@ -28,7 +28,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block' index='1'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2argvdata/disk-backing-chains-index.x86_64-2.12.0.args b/tests/qemuxml2argvdata/disk-backing-chains-index.x86_64-2.12.0.args
+index fb8a62d..4173e13 100644
+--- a/tests/qemuxml2argvdata/disk-backing-chains-index.x86_64-2.12.0.args
++++ b/tests/qemuxml2argvdata/disk-backing-chains-index.x86_64-2.12.0.args
+@@ -31,7 +31,7 @@ file=/tmp/lib/domain--1-QEMUGuest1/master-key.aes \
+ format=qcow2,if=none,id=drive-virtio-disk0' \
+ -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x2,drive=drive-virtio-disk0,\
+ id=virtio-disk0,bootindex=1 \
+--drive file=nbd:unix:/var/run/nbdsock:exportname=bar,format=qcow2,if=none,\
++-drive file=nbd:unix:/run/nbdsock:exportname=bar,format=qcow2,if=none,\
+ id=drive-virtio-disk1 \
+ -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x3,drive=drive-virtio-disk1,\
+ id=virtio-disk1 \
+diff --git a/tests/qemuxml2argvdata/disk-backing-chains-index.x86_64-latest.args b/tests/qemuxml2argvdata/disk-backing-chains-index.x86_64-latest.args
+index a2f030f..6088baf 100644
+--- a/tests/qemuxml2argvdata/disk-backing-chains-index.x86_64-latest.args
++++ b/tests/qemuxml2argvdata/disk-backing-chains-index.x86_64-latest.args
+@@ -62,7 +62,7 @@ id=virtio-disk0,bootindex=1 \
+ "node-name":"libvirt-18-storage","auto-read-only":true,"discard":"unmap"}' \
+ -blockdev '{"node-name":"libvirt-18-format","read-only":true,"driver":"qcow2",\
+ "file":"libvirt-18-storage","backing":"libvirt-19-format"}' \
+--blockdev '{"driver":"nbd","server":{"type":"unix","path":"/var/run/nbdsock"},\
++-blockdev '{"driver":"nbd","server":{"type":"unix","path":"/run/nbdsock"},\
+ "export":"bar","node-name":"libvirt-17-storage","auto-read-only":true,\
+ "discard":"unmap"}' \
+ -blockdev '{"node-name":"libvirt-17-format","read-only":false,"driver":"qcow2",\
+diff --git a/tests/qemuxml2argvdata/disk-backing-chains-index.xml b/tests/qemuxml2argvdata/disk-backing-chains-index.xml
+index 5e0a03f..1e052cb 100644
+--- a/tests/qemuxml2argvdata/disk-backing-chains-index.xml
++++ b/tests/qemuxml2argvdata/disk-backing-chains-index.xml
+@@ -28,7 +28,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar' index='9'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block' index='8'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2argvdata/disk-backing-chains-noindex.x86_64-2.12.0.args b/tests/qemuxml2argvdata/disk-backing-chains-noindex.x86_64-2.12.0.args
+index fb8a62d..4173e13 100644
+--- a/tests/qemuxml2argvdata/disk-backing-chains-noindex.x86_64-2.12.0.args
++++ b/tests/qemuxml2argvdata/disk-backing-chains-noindex.x86_64-2.12.0.args
+@@ -31,7 +31,7 @@ file=/tmp/lib/domain--1-QEMUGuest1/master-key.aes \
+ format=qcow2,if=none,id=drive-virtio-disk0' \
+ -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x2,drive=drive-virtio-disk0,\
+ id=virtio-disk0,bootindex=1 \
+--drive file=nbd:unix:/var/run/nbdsock:exportname=bar,format=qcow2,if=none,\
++-drive file=nbd:unix:/run/nbdsock:exportname=bar,format=qcow2,if=none,\
+ id=drive-virtio-disk1 \
+ -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x3,drive=drive-virtio-disk1,\
+ id=virtio-disk1 \
+diff --git a/tests/qemuxml2argvdata/disk-backing-chains-noindex.x86_64-latest.args b/tests/qemuxml2argvdata/disk-backing-chains-noindex.x86_64-latest.args
+index a2f030f..6088baf 100644
+--- a/tests/qemuxml2argvdata/disk-backing-chains-noindex.x86_64-latest.args
++++ b/tests/qemuxml2argvdata/disk-backing-chains-noindex.x86_64-latest.args
+@@ -62,7 +62,7 @@ id=virtio-disk0,bootindex=1 \
+ "node-name":"libvirt-18-storage","auto-read-only":true,"discard":"unmap"}' \
+ -blockdev '{"node-name":"libvirt-18-format","read-only":true,"driver":"qcow2",\
+ "file":"libvirt-18-storage","backing":"libvirt-19-format"}' \
+--blockdev '{"driver":"nbd","server":{"type":"unix","path":"/var/run/nbdsock"},\
++-blockdev '{"driver":"nbd","server":{"type":"unix","path":"/run/nbdsock"},\
+ "export":"bar","node-name":"libvirt-17-storage","auto-read-only":true,\
+ "discard":"unmap"}' \
+ -blockdev '{"node-name":"libvirt-17-format","read-only":false,"driver":"qcow2",\
+diff --git a/tests/qemuxml2argvdata/disk-backing-chains-noindex.xml b/tests/qemuxml2argvdata/disk-backing-chains-noindex.xml
+index 1336d0f..2c55dbd 100644
+--- a/tests/qemuxml2argvdata/disk-backing-chains-noindex.xml
++++ b/tests/qemuxml2argvdata/disk-backing-chains-noindex.xml
+@@ -28,7 +28,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2argvdata/disk-backing-chains.xml b/tests/qemuxml2argvdata/disk-backing-chains.xml
+index 2eaafb3..7dc82ea 100644
+--- a/tests/qemuxml2argvdata/disk-backing-chains.xml
++++ b/tests/qemuxml2argvdata/disk-backing-chains.xml
+@@ -28,7 +28,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block' index='1'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2argvdata/disk-network-nbd.args b/tests/qemuxml2argvdata/disk-network-nbd.args
+index d78830a..510cfdf 100644
+--- a/tests/qemuxml2argvdata/disk-network-nbd.args
++++ b/tests/qemuxml2argvdata/disk-network-nbd.args
+@@ -38,7 +38,7 @@ id=virtio-disk2 \
+ -drive 'file=nbd://[::1]:6000/bar,format=raw,if=none,id=drive-virtio-disk3' \
+ -device virtio-blk-pci,bus=pci.0,addr=0x6,drive=drive-virtio-disk3,\
+ id=virtio-disk3 \
+--drive file=nbd:unix:/var/run/nbdsock:exportname=bar,format=raw,if=none,\
++-drive file=nbd:unix:/run/nbdsock:exportname=bar,format=raw,if=none,\
+ id=drive-virtio-disk4 \
+ -device virtio-blk-pci,bus=pci.0,addr=0x7,drive=drive-virtio-disk4,\
+ id=virtio-disk4
+diff --git a/tests/qemuxml2argvdata/disk-network-nbd.x86_64-2.12.0.args b/tests/qemuxml2argvdata/disk-network-nbd.x86_64-2.12.0.args
+index a462dcf..bcbf282 100644
+--- a/tests/qemuxml2argvdata/disk-network-nbd.x86_64-2.12.0.args
++++ b/tests/qemuxml2argvdata/disk-network-nbd.x86_64-2.12.0.args
+@@ -40,7 +40,7 @@ id=virtio-disk2 \
+ -drive 'file=nbd://[::1]:6000/bar,format=raw,if=none,id=drive-virtio-disk3' \
+ -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x5,drive=drive-virtio-disk3,\
+ id=virtio-disk3 \
+--drive file=nbd:unix:/var/run/nbdsock:exportname=bar,format=raw,if=none,\
++-drive file=nbd:unix:/run/nbdsock:exportname=bar,format=raw,if=none,\
+ id=drive-virtio-disk4 \
+ -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x6,drive=drive-virtio-disk4,\
+ id=virtio-disk4 \
+diff --git a/tests/qemuxml2argvdata/disk-network-nbd.x86_64-latest.args b/tests/qemuxml2argvdata/disk-network-nbd.x86_64-latest.args
+index 95ef390..f73df9d 100644
+--- a/tests/qemuxml2argvdata/disk-network-nbd.x86_64-latest.args
++++ b/tests/qemuxml2argvdata/disk-network-nbd.x86_64-latest.args
+@@ -54,7 +54,7 @@ id=virtio-disk2 \
+ "file":"libvirt-2-storage"}' \
+ -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x5,drive=libvirt-2-format,\
+ id=virtio-disk3 \
+--blockdev '{"driver":"nbd","server":{"type":"unix","path":"/var/run/nbdsock"},\
++-blockdev '{"driver":"nbd","server":{"type":"unix","path":"/run/nbdsock"},\
+ "export":"bar","node-name":"libvirt-1-storage","auto-read-only":true,\
+ "discard":"unmap"}' \
+ -blockdev '{"node-name":"libvirt-1-format","read-only":false,"driver":"raw",\
+diff --git a/tests/qemuxml2argvdata/disk-network-nbd.xml b/tests/qemuxml2argvdata/disk-network-nbd.xml
+index f9630d6..31d71ac 100644
+--- a/tests/qemuxml2argvdata/disk-network-nbd.xml
++++ b/tests/qemuxml2argvdata/disk-network-nbd.xml
+@@ -45,7 +45,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='raw'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <target dev='vde' bus='virtio'/>
+     </disk>
+diff --git a/tests/qemuxml2xmloutdata/disk-backing-chains-active.xml b/tests/qemuxml2xmloutdata/disk-backing-chains-active.xml
+index e24956f..1dc9962 100644
+--- a/tests/qemuxml2xmloutdata/disk-backing-chains-active.xml
++++ b/tests/qemuxml2xmloutdata/disk-backing-chains-active.xml
+@@ -29,7 +29,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block' index='1'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2xmloutdata/disk-backing-chains-inactive.xml b/tests/qemuxml2xmloutdata/disk-backing-chains-inactive.xml
+index e39e218..1d9329a 100644
+--- a/tests/qemuxml2xmloutdata/disk-backing-chains-inactive.xml
++++ b/tests/qemuxml2xmloutdata/disk-backing-chains-inactive.xml
+@@ -29,7 +29,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2xmloutdata/disk-backing-chains-index-active.xml b/tests/qemuxml2xmloutdata/disk-backing-chains-index-active.xml
+index 2b5bc9e..bc41e87 100644
+--- a/tests/qemuxml2xmloutdata/disk-backing-chains-index-active.xml
++++ b/tests/qemuxml2xmloutdata/disk-backing-chains-index-active.xml
+@@ -29,7 +29,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar' index='9'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block' index='8'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2xmloutdata/disk-backing-chains-index-inactive.xml b/tests/qemuxml2xmloutdata/disk-backing-chains-index-inactive.xml
+index 29d1ad0..a90b31c 100644
+--- a/tests/qemuxml2xmloutdata/disk-backing-chains-index-inactive.xml
++++ b/tests/qemuxml2xmloutdata/disk-backing-chains-index-inactive.xml
+@@ -29,7 +29,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2xmloutdata/disk-backing-chains-noindex.xml b/tests/qemuxml2xmloutdata/disk-backing-chains-noindex.xml
+index 29d1ad0..a90b31c 100644
+--- a/tests/qemuxml2xmloutdata/disk-backing-chains-noindex.xml
++++ b/tests/qemuxml2xmloutdata/disk-backing-chains-noindex.xml
+@@ -29,7 +29,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='qcow2'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <backingStore type='block'>
+         <format type='qcow2'/>
+diff --git a/tests/qemuxml2xmloutdata/disk-network-nbd.xml b/tests/qemuxml2xmloutdata/disk-network-nbd.xml
+index 818e8d7..fef98a9 100644
+--- a/tests/qemuxml2xmloutdata/disk-network-nbd.xml
++++ b/tests/qemuxml2xmloutdata/disk-network-nbd.xml
+@@ -49,7 +49,7 @@
+     <disk type='network' device='disk'>
+       <driver name='qemu' type='raw'/>
+       <source protocol='nbd' name='bar'>
+-        <host transport='unix' socket='/var/run/nbdsock'/>
++        <host transport='unix' socket='/run/nbdsock'/>
+       </source>
+       <target dev='vde' bus='virtio'/>
+       <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
+diff --git a/tests/vircgroupdata/ovirt-node-6.6.mounts b/tests/vircgroupdata/ovirt-node-6.6.mounts
+index ef07f4f..d6a5e3c 100644
+--- a/tests/vircgroupdata/ovirt-node-6.6.mounts
++++ b/tests/vircgroupdata/ovirt-node-6.6.mounts
+@@ -13,7 +13,7 @@ none /var/lib/stateless/writable tmpfs rw,rootcontext=system_u:object_r:var_lib_
+ none /var/cache/man tmpfs rw,rootcontext=system_u:object_r:var_lib_t:s0,seclabel,relatime 0 0
+ none /var/lock tmpfs rw,rootcontext=system_u:object_r:var_lib_t:s0,seclabel,relatime 0 0
+ none /var/log tmpfs rw,rootcontext=system_u:object_r:var_lib_t:s0,seclabel,relatime 0 0
+-none /var/run tmpfs rw,rootcontext=system_u:object_r:var_lib_t:s0,seclabel,relatime 0 0
++none /run tmpfs rw,rootcontext=system_u:object_r:var_lib_t:s0,seclabel,relatime 0 0
+ none /var/lib/dbus tmpfs rw,rootcontext=system_u:object_r:var_lib_t:s0,seclabel,relatime 0 0
+ none /var/lib/nfs tmpfs rw,rootcontext=system_u:object_r:var_lib_t:s0,seclabel,relatime 0 0
+ none /tmp tmpfs rw,rootcontext=system_u:object_r:var_lib_t:s0,seclabel,relatime 0 0
+-- 
+2.24.1
+
+
